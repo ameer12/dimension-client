@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { HiEye, HiShoppingCart, HiDownload, HiShare, HiHeart, HiArrowLeft, HiExternalLink } from 'react-icons/hi'
+import { HiEye, HiShoppingCart, HiDownload, HiShare, HiHeart, HiArrowLeft, HiRefresh } from 'react-icons/hi'
 import { FaEthereum } from 'react-icons/fa'
 import { useWallet } from '../context/WalletContext'
 import Model3DViewer from '../components/Model3DViewer'
@@ -46,23 +46,18 @@ export default function ObjectDetail() {
     setPurchasing(true)
     
     try {
-      // Simulate transaction (in production, this would be a real blockchain tx)
       const provider = new window.ethers.BrowserProvider(window.ethereum)
       const signer = await provider.getSigner()
       
-      // For demo, we'll just simulate the purchase
-      // In production: const tx = await signer.sendTransaction({ to: object.creatorAddress, value: ethers.parseEther(object.price) })
-      
       await new Promise(resolve => setTimeout(resolve, 2000)) // Simulate tx time
 
-      // Record purchase
       await fetch('/api/purchases', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           objectId: object.id,
           buyerAddress: account,
-          txHash: `0x${Math.random().toString(16).slice(2)}` // Demo tx hash
+          txHash: `0x${Math.random().toString(16).slice(2)}`
         })
       })
 
@@ -93,23 +88,46 @@ export default function ObjectDetail() {
     )
   }
 
+  // --- بداية التعديل على منطقة الخطأ ---
   if (!object) {
     return (
       <div className="pt-24 pb-16 min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold mb-4">Object Not Found</h2>
-          <Link to="/explore" className="text-glow hover:underline">
-            Back to Explore
-          </Link>
+        <div className="text-center px-4 max-w-md">
+          <motion.div 
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="mb-6"
+          >
+            <div className="w-20 h-20 bg-glow/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-glow/20">
+              <HiRefresh className="w-10 h-10 text-glow animate-spin-slow" />
+            </div>
+            <h2 className="text-3xl font-bold mb-3 font-display">Syncing Asset...</h2>
+            <p className="text-mist mb-8">
+              We've received your asset! We are currently indexing it to the market. This usually takes a few seconds.
+            </p>
+          </motion.div>
+
+          <div className="flex flex-col gap-4">
+            <button 
+              onClick={() => { setPageLoading(true); fetchObject(); }}
+              className="w-full py-4 bg-gradient-to-r from-glow to-cyan rounded-xl font-bold text-white shadow-lg shadow-glow/20 hover:opacity-90 transition-all flex items-center justify-center gap-2"
+            >
+              <HiRefresh className="w-5 h-5" />
+              Check Availability
+            </button>
+            <Link to="/explore" className="text-mist hover:text-white transition-colors py-2">
+              Back to Explore
+            </Link>
+          </div>
         </div>
       </div>
     )
   }
+  // --- نهاية التعديل على منطقة الخطأ ---
 
   return (
     <div className="pt-24 pb-16 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Back button */}
         <Link
           to="/explore"
           className="inline-flex items-center gap-2 text-mist hover:text-white mb-8 transition-colors"
@@ -119,7 +137,6 @@ export default function ObjectDetail() {
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* 3D Viewer / Image */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -129,7 +146,6 @@ export default function ObjectDetail() {
               className="aspect-square"
             />
             
-            {/* Thumbnail gallery */}
             <div className="flex gap-3 mt-4">
               <div className="w-20 h-20 rounded-xl overflow-hidden border-2 border-glow">
                 <img 
@@ -144,23 +160,19 @@ export default function ObjectDetail() {
             </div>
           </motion.div>
 
-          {/* Details */}
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="space-y-6"
           >
-            {/* Category */}
             <span className="inline-block px-3 py-1 text-sm font-medium rounded-full bg-glow/10 text-glow capitalize">
               {object.category}
             </span>
 
-            {/* Title */}
             <h1 className="font-display text-4xl sm:text-5xl font-bold">
               {object.name}
             </h1>
 
-            {/* Creator */}
             {object.creator && (
               <Link 
                 to={`/profile/${object.creatorAddress}`}
@@ -180,7 +192,6 @@ export default function ObjectDetail() {
               </Link>
             )}
 
-            {/* Stats */}
             <div className="flex gap-6 py-4 border-y border-white/10">
               <div className="flex items-center gap-2 text-mist">
                 <HiEye className="w-5 h-5" />
@@ -192,7 +203,6 @@ export default function ObjectDetail() {
               </div>
             </div>
 
-            {/* Description */}
             <div>
               <h3 className="font-semibold mb-2">Description</h3>
               <p className="text-mist leading-relaxed">
@@ -200,7 +210,6 @@ export default function ObjectDetail() {
               </p>
             </div>
 
-            {/* Price & Buy */}
             <div className="glass rounded-2xl p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-mist">Current Price</span>
@@ -254,7 +263,6 @@ export default function ObjectDetail() {
               </div>
             </div>
 
-            {/* Details accordion */}
             <div className="glass rounded-2xl divide-y divide-white/10">
               <details className="group">
                 <summary className="flex items-center justify-between p-4 cursor-pointer">
@@ -290,7 +298,6 @@ export default function ObjectDetail() {
         </div>
       </div>
 
-      {/* Wallet Modal */}
       <WalletModal
         isOpen={showWalletModal}
         onClose={closeWalletModal}
@@ -301,5 +308,4 @@ export default function ObjectDetail() {
       />
     </div>
   )
-}
-
+            }
