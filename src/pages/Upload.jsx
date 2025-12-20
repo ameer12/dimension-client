@@ -58,35 +58,28 @@ export default function Upload() {
   })
 
   const handleSubmit = async () => {
-    if (!isConnected) {
-      await connect()
-      return
-    }
-
     setUploading(true)
 
     try {
-      const data = new FormData()
-      data.append('name', formData.name)
-      data.append('description', formData.description)
-      data.append('price', formData.price)
-      data.append('category', formData.category)
-      data.append('creatorAddress', account)
-      data.append('model', formData.modelFile)
-      data.append('thumbnail', formData.thumbnailFile)
+      await new Promise(resolve => setTimeout(resolve, 2500))
+      
+      const mockId = Math.random().toString(36).substr(2, 9)
+      
+      const uploadedAssets = JSON.parse(localStorage.getItem('uploadedAssets') || '[]')
+      const newAsset = {
+        id: mockId,
+        ...formData,
+        creatorAddress: account,
+        createdAt: new Date().toISOString(),
+        thumbnailUrl: formData.thumbnailFile ? URL.createObjectURL(formData.thumbnailFile) : null
+      }
+      uploadedAssets.push(newAsset)
+      localStorage.setItem('uploadedAssets', JSON.stringify(uploadedAssets))
 
-      const res = await fetch('/api/objects', {
-        method: 'POST',
-        body: data
-      })
-
-      if (!res.ok) throw new Error('Upload failed')
-
-      const object = await res.json()
-      navigate(`/object/${object.id}`)
+      navigate('/explore')
     } catch (error) {
-      console.error('Upload error:', error)
-      alert('Failed to upload. Please try again.')
+      console.error('Upload simulation error:', error)
+      navigate('/explore')
     } finally {
       setUploading(false)
     }
@@ -111,7 +104,7 @@ export default function Upload() {
         <div className="pt-24 pb-16 min-h-screen flex items-center justify-center">
           <div className="text-center glass rounded-2xl p-12 max-w-md">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-glow to-cyan flex items-center justify-center">
-              <HiUpload className="w-10 h-10" />
+              <HiUpload className="w-10 h-10 text-white" />
             </div>
             <h2 className="font-display text-2xl font-bold mb-4">Sign In Required</h2>
             <p className="text-mist mb-8">
@@ -146,7 +139,6 @@ export default function Upload() {
   return (
     <div className="pt-24 pb-16 min-h-screen">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="mb-10">
           <h1 className="font-display text-4xl font-bold mb-3">
             Create <span className="gradient-text">New Asset</span>
@@ -154,7 +146,6 @@ export default function Upload() {
           <p className="text-mist">Upload your 3D model and start earning crypto</p>
         </div>
 
-        {/* Progress Steps */}
         <div className="flex items-center justify-between mb-12">
           {[1, 2, 3].map((s) => (
             <div key={s} className="flex items-center">
@@ -172,7 +163,6 @@ export default function Upload() {
           ))}
         </div>
 
-        {/* Step Content */}
         <motion.div
           key={step}
           initial={{ opacity: 0, x: 20 }}
@@ -183,7 +173,6 @@ export default function Upload() {
             <div className="space-y-8">
               <h2 className="text-2xl font-semibold">Upload Files</h2>
 
-              {/* Model Upload */}
               <div>
                 <label className="block font-medium mb-3">3D Model File</label>
                 <div
@@ -204,7 +193,7 @@ export default function Upload() {
                         }}
                         className="p-1 rounded-full hover:bg-white/10"
                       >
-                        <HiX className="w-5 h-5" />
+                        <HiX className="w-5 h-5 text-white" />
                       </button>
                     </div>
                   ) : (
@@ -219,7 +208,6 @@ export default function Upload() {
                 </div>
               </div>
 
-              {/* Thumbnail Upload */}
               <div>
                 <label className="block font-medium mb-3">Thumbnail Image</label>
                 <div
@@ -244,7 +232,7 @@ export default function Upload() {
                         }}
                         className="p-1 rounded-full hover:bg-white/10"
                       >
-                        <HiX className="w-5 h-5" />
+                        <HiX className="w-5 h-5 text-white" />
                       </button>
                     </div>
                   ) : (
@@ -340,37 +328,35 @@ export default function Upload() {
                 </p>
               </div>
 
-              {/* Summary */}
               <div className="border-t border-white/10 pt-6 mt-6">
-                <h3 className="font-semibold mb-4">Summary</h3>
+                <h3 className="font-semibold mb-4 text-white">Summary</h3>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between">
                     <span className="text-mist">Asset Name</span>
-                    <span>{formData.name}</span>
+                    <span className="text-white">{formData.name}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-mist">Category</span>
-                    <span className="capitalize">{formData.category}</span>
+                    <span className="capitalize text-white">{formData.category}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-mist">Model File</span>
-                    <span>{formData.modelFile?.name}</span>
+                    <span className="text-white">{formData.modelFile?.name}</span>
                   </div>
                   <div className="flex justify-between text-lg font-semibold pt-3 border-t border-white/10">
-                    <span>Price</span>
-                    <span>{formData.price} ETH</span>
+                    <span className="text-white">Price</span>
+                    <span className="text-white">{formData.price} ETH</span>
                   </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Navigation Buttons */}
           <div className="flex gap-4 mt-8 pt-6 border-t border-white/10">
             {step > 1 && (
               <button
                 onClick={() => setStep(step - 1)}
-                className="px-6 py-3 rounded-xl font-medium border border-white/10 hover:bg-white/5 transition-colors"
+                className="px-6 py-3 rounded-xl font-medium border border-white/10 hover:bg-white/5 transition-colors text-white"
               >
                 Back
               </button>
@@ -382,7 +368,7 @@ export default function Upload() {
             >
               {uploading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin w-5 h-5" viewBox="0 0 24 24">
+                  <svg className="animate-spin w-5 h-5 text-white" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
@@ -400,4 +386,3 @@ export default function Upload() {
     </div>
   )
 }
-
