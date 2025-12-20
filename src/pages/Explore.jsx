@@ -39,14 +39,45 @@ export default function Explore() {
   const fetchObjects = async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams()
-      if (activeCategory !== 'all') params.set('category', activeCategory)
-      if (activeSort) params.set('sort', activeSort)
-      if (search) params.set('search', search)
+      const localAssets = JSON.parse(localStorage.getItem('uploadedAssets') || '[]')
+      
+      let serverData = []
+      try {
+        const params = new URLSearchParams()
+        if (activeCategory !== 'all') params.set('category', activeCategory)
+        if (activeSort) params.set('sort', activeSort)
+        if (search) params.set('search', search)
 
-      const res = await fetch(`/api/objects?${params}`)
-      const data = await res.json()
-      setObjects(data)
+        const res = await fetch(`/api/objects?${params}`)
+        if (res.ok) {
+          serverData = await res.json()
+        }
+      } catch (e) {
+        console.log("Server currently offline, using local data")
+      }
+
+      let combinedData = [...localAssets, ...serverData]
+
+      if (activeCategory !== 'all') {
+        combinedData = combinedData.filter(obj => obj.category === activeCategory)
+      }
+
+      if (search) {
+        combinedData = combinedData.filter(obj => 
+          obj.name.toLowerCase().includes(search.toLowerCase()) || 
+          obj.description.toLowerCase().includes(search.toLowerCase())
+        )
+      }
+
+      if (activeSort === 'price-low') {
+        combinedData.sort((a, b) => parseFloat(a.price) - parseFloat(b.price))
+      } else if (activeSort === 'price-high') {
+        combinedData.sort((a, b) => parseFloat(b.price) - parseFloat(a.price))
+      } else if (activeSort === 'newest') {
+        combinedData.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      }
+
+      setObjects(combinedData)
     } catch (error) {
       console.error('Failed to fetch objects:', error)
     } finally {
@@ -71,7 +102,6 @@ export default function Explore() {
   return (
     <div className="pt-24 pb-16 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="font-display text-4xl sm:text-5xl font-bold mb-4">
             Explore <span className="gradient-text">3D Assets</span>
@@ -81,9 +111,7 @@ export default function Explore() {
           </p>
         </div>
 
-        {/* Search & Filters Bar */}
         <div className="flex flex-col lg:flex-row gap-4 mb-8">
-          {/* Search */}
           <div className="relative flex-1">
             <HiSearch className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-mist" />
             <input
@@ -95,7 +123,6 @@ export default function Explore() {
             />
           </div>
 
-          {/* Sort Dropdown */}
           <div className="flex gap-4">
             <select
               value={activeSort}
@@ -109,7 +136,6 @@ export default function Explore() {
               ))}
             </select>
 
-            {/* View Toggle */}
             <div className="hidden sm:flex items-center gap-1 p-1 bg-slate rounded-xl border border-white/10">
               <button
                 onClick={() => setViewMode('grid')}
@@ -125,7 +151,6 @@ export default function Explore() {
               </button>
             </div>
 
-            {/* Mobile Filter Toggle */}
             <button
               onClick={() => setShowFilters(!showFilters)}
               className="lg:hidden p-3.5 bg-slate border border-white/10 rounded-xl text-mist hover:text-white transition-colors"
@@ -136,10 +161,9 @@ export default function Explore() {
         </div>
 
         <div className="flex gap-8">
-          {/* Categories Sidebar */}
           <aside className={`${showFilters ? 'block' : 'hidden'} lg:block w-full lg:w-56 shrink-0`}>
             <div className="glass rounded-2xl p-4 sticky top-24">
-              <h3 className="font-semibold mb-4 px-2">Categories</h3>
+              <h3 className="font-semibold mb-4 px-2 text-white">Categories</h3>
               <nav className="space-y-1">
                 {categories.map((cat) => (
                   <button
@@ -158,7 +182,6 @@ export default function Explore() {
             </div>
           </aside>
 
-          {/* Objects Grid */}
           <div className="flex-1">
             {loading ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -178,7 +201,7 @@ export default function Explore() {
                 <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-slate flex items-center justify-center">
                   <HiSearch className="w-10 h-10 text-mist" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2">No assets found</h3>
+                <h3 className="text-xl font-semibold mb-2 text-white">No assets found</h3>
                 <p className="text-mist">Try adjusting your search or filters</p>
               </div>
             ) : (
@@ -201,4 +224,3 @@ export default function Explore() {
     </div>
   )
 }
-
