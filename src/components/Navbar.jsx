@@ -166,7 +166,7 @@ export default function Navbar() {
                     {link.label}
                   </Link>
                 ))}
-                
+
                 {isConnected ? (
                   <>
                     <Link
