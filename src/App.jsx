@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Landing from './pages/Landing'
@@ -15,9 +15,17 @@ function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/explore" element={<Explore />} />
+          
+          {/* تأكد أن :id هنا يطابق ما يرسله السيرفر في صفحة الرفع */}
           <Route path="/object/:id" element={<ObjectDetail />} />
+          
           <Route path="/upload" element={<Upload />} />
+          
+          {/* أضفنا مسار احتياطي للملف الشخصي في حال عدم وجود عنوان */}
           <Route path="/profile/:address" element={<Profile />} />
+          
+          {/* حل مشكلة المسارات المعطلة: أي رابط خطأ سيعيد المستخدم للرئيسية */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
       <Footer />
